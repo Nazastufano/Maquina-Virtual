@@ -8,7 +8,7 @@ UNMDP - Facultad de Ingeniería MV1 2025 Arquitectura de Computadoras <br>
 <h3>&nbsp;&nbsp;&nbsp;&nbsp;TRADUCCIÓN (Traductor):</h3> <p>debe leer el código fuente Assembler de un archivo de texto (*.asm), traducirlo a código máquina y generar otro archivo binario codificado (*.vmx), que es el programa que se ejecutará en la máquina virtual.</p>
 <h3>&nbsp;&nbsp;&nbsp;&nbsp;EJECUCIÓN (Máquina Virtual):</h3> <p>debe leer el archivo generado por el Traductor (*.vmx), configurar la memoria principal y los registros, interpretar las instrucciones y emular su funcionamiento para producir los resultados de su ejecución.</p>
 
-<h1>IMAGEN1</h1>
+<img src="./assets/img/Imagen1.png" alt="Imagen1"/>
 
 <h3>Traductor</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;El traductor, provisto por la cátedra, se utiliza desde una consola del siguiente modo:</p>
@@ -77,7 +77,7 @@ UNMDP - Facultad de Ingeniería MV1 2025 Arquitectura de Computadoras <br>
 <h3>Registros</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp; Si bien en esta primera parte la máquina virtual utilizará solo 17 registros, deberá tener la capacidad para almacenar 32, los cuales se codifican de la siguiente manera:</p>
 
-<h1>IMAGEN2</h1>
+<img src="./assets/img/Imagen2.png" alt="Imagen2"/>
 
 <h3>Programa</h3>
 <p>El programa es el resultado de la traducción y el punto de entrada de la máquina virtual. Por convención, tiene extensión <strong>.vmx</strong> para ser identificado fácilmente como un archivo ejecutable por la máquina virtual. Además del código en lenguaje máquina, el programa binario posee al comienzo una cabecera con la siguiente estructura:</p>
@@ -114,28 +114,27 @@ UNMDP - Facultad de Ingeniería MV1 2025 Arquitectura de Computadoras <br>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Cada segmento podría estar ubicado en cualquier parte de la memoria. Es por eso que el programa no puede tener una dirección física para acceder a una celda de memoria. En su lugar, debe utilizar <strong>direcciones lógicas</strong>, que son relativas a cada segmento. Durante la ejecución, la máquina virtual se encargará de traducir esa dirección lógica en una física y acceder a la celda de memoria específica. </p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Por lo tanto, para acceder a la memoria se debe conocer el segmento y un desplazamiento dentro del mismo. Un puntero a memoria consta de 4 bytes: <strong>2 bytes para el código de segmento y 2 bytes para el desplazamiento</strong>. El código de segmento indica su posición en la tabla de descriptores de segmentos. Por ejemplo, para acceder al byte 8 del segmento de datos se deberá utilizar la dirección lógica 00 01 00 08 (hexadecimal). Si se debe acceder al byte 9 del segmento de código, se deberá utilizar la dirección lógica 00 00 00 09 (hexadecimal).</p>
 
-<h1>IMAGEN 3</h1>
+<img src="./assets/img/Imagen3.png" alt="Imagen3"/>
 
 <h3>Direcciones físicas</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;La <strong>dirección física</strong> es directamente la posición de un byte en la memoria principal a partir de la cual se comienza a leer o escribir. Durante la ejecución, para acceder a un dato de la memoria, la máquina virtual debe traducir las direcciones lógicas en físicas en cada acceso. Para ello, se toma el código de segmento de la dirección lógica para obtener la dirección base del mismo, a través de la tabla de segmentos y, finalmente, se le suman los 16 bits menos significativos de la dirección lógica (el desplazamiento) para formar la dirección física de la memoria a la cual se debe acceder. Por ejemplo: </p>
 
-<h1>IMAGEN 4</h1>
+<img src="./assets/img/Imagen4.png" alt="Imagen4"/>
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Luego de obtener la dirección física, y sabiendo cuántos bytes van a acceder, ya sea para lectura o escritura de la memoria, la máquina virtual debe garantizar que el acceso se encuentre dentro del segmento especificado en la dirección lógica, para ello debe utilizar el tamaño del segmento. por ejemplo, si se quieren acceder a 4 bytes desde la dirección física del ejemplo anterior:</p>
 
-
-<h1>IMAGEN 5</h1>
+<img src="./assets/img/Imagen5.png" alt="Imagen5"/>
 
 <h3>Instrucciones en lenguaje máquina</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Cada instrucción en lenguaje máquina se compone de un código de operación y sus operandos. Existen instrucciones con dos operandos, un operando o ninguno. El primer byte de la instrucción siempre contendrá los tipos de operandos y el código de operación, codificados de la siguiente manera:</p>
 
-<h1>IMAGEN 6</h1>
+<img src="./assets/img/Imagen6.png" alt="Imagen6"/>
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp; Luego, los siguientes bytes contienen los operandos. <strong>La instrucción no tiene una longitud fija</strong>, sino que dependerá de la cantidad y los tipos de sus operandos. Tanto los operandos como sus tipos se codifican en lenguaje máquina en el orden inverso al que se encuentran en el lenguaje Assembler.</p>
 <h3>Códigos de operación</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp; El lenguaje Assembler es una representación del lenguaje máquina, donde las instrucciones se describen con un <strong>mnemónico</strong>. En esta primera parte solo se implementarán 26 instrucciones, las cuales se listan a continuación junto con sus códigos de operación en hexadecimal.</p>
 
-<h1>IMAGEN 7</h1>
+<img src="./assets/img/Imagen7.png" alt="Imagen7"/>
 
 <h3>Operandos</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;La máquina virtual admite tres tipos de operandos, que codifican de la siguiente manera:</p>
@@ -175,19 +174,19 @@ UNMDP - Facultad de Ingeniería MV1 2025 Arquitectura de Computadoras <br>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>NOTA:</strong> el tamaño del operando en bytes coincide con su correspondiente código binario.</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Operando de registro:</strong> su valor es el código del registro al cual se accede.</p>
 
-<h1>IMAGEN 8</h1>
+<img src="./assets/img/Imagen8.png" alt="Imagen8"/>
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Operando inmediato:</strong>  su valor es directamente el valor del operando.</p>
 
-<h1>IMAGEN 9</h1>
+<img src="./assets/img/Imagen9.png" alt="Imagen9"/>
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Operando de memoria:</strong> su valor se compone por el código del registro y el desplazamiento correspondientes. La posición en la memoria principal a la cual se accede es relativa al comienzo de algún segmento (es decir, una dirección lógica).</p>
 
-<h1>IMAGEN 10</h1>
+<img src="./assets/img/Imagen10.png" alt="Imagen10"/>
 
 <h3>Ejemplos</h3>
 
-<h1>IMAGEN 11</h1>
+<img src="./assets/img/Imagen11.png" alt="Imagen11"/>
 
 <h3>Llamadas al sistema</h3>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;La instrucción SYS, en esta primera parte, debe soportar las llamadas al sistema READ (1) y WRITE (2). En ambos casos, la posición de memoria inicial estará indicada en EDX y el modo de lectura/escritura en EAX, mientras que ECX contendrá la cantidad de celdas en los 2 bytes menos significativos y el tamaño de las mismas en los 2 bytes más significativos. En la pantalla se debe mostrar un prompt ([XXXX]:) de 4 dígitos hexadecimales, que indique la dirección física de la celda en la que se encuentra cada dato.</p>
