@@ -10,9 +10,12 @@
 typedef struct {
     char nombre[ST3];
     uint32_t valor; 
-} TReg;  // poner en TDA?
+} TReg;
 
-void leerArch(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]);
+typedef char MNO[ST4];
+
+void cargarMnemonicos(MNO mnemonicos[32]);
+void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]);
 void disassembler();
 void cargarRegistros(TReg registros[BYTES]);
 void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int *condicion);
@@ -21,10 +24,12 @@ void main(int argc, char *argv[]){
     TReg registros[BYTES];  // poner en TDA?
     uint8_t memoria[CAPACIDADMEM]; // poner en TDA?
     uint8_t N;
+    MNO mnemonicos[BYTES];
 
     if (argc >= 2 && argc <=3){
-        leerArch(argc, argv, &N, memoria);
+        cargarCodeSeg(argc, argv, &N, memoria);
         cargarRegistros(registros);
+        cargarNmonicos(mnemonicos);
         if(argc == 3)
             if (strcmp("-d", argv[3])){
                 //muestra la traduccion
@@ -35,14 +40,18 @@ void main(int argc, char *argv[]){
             } else
                 printf("Argumento invalido. %s no existe.\n", argv[3]);
         
-            
         //ejecutarInstrucciones(memoria,N);
+        /*
+        EjecutarPrograma
+            CargarOPC
+            EjecutarInstruccion
+        */
+
     } else
         printf("Cantidad invalida de argumentos.\n");
-
 }
 
-void leerArch(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]){
+void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]){
     FILE * archB;
     char nomArch[20], header[6];
     uint8_t datoArch, version;
@@ -145,5 +154,18 @@ void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int 
             registros[3].valor += ((registros[5].valor >> 6) & 0x03)+ ((registros[6].valor >> 6) & 0x03) + 1; // si no es JMP o primos
     }else{
         *condicion = 0;
+    }
+}
+
+void cargarNmonicos(MNO mnemonicos[32]){
+    FILE * arch;
+    int i = 0;
+
+    if ((arch = fopen("assets/archivos/instrucciones.TXT","rt"))==NULL)
+        printf("No es posible abrir el archivo de instrucciones. Es posible que se haya ingresado mal la direccion.\n");
+    else{
+        while(fscanf(arch," %s", mnemonicos[i]) == 1)
+            i++;
+        fclose(arch);
     }
 }
