@@ -6,7 +6,7 @@
 #define ST3 4
 #define BYTES 32
 #define CAPACIDADMEM 16384
-
+#define CANTDESSEG 8
 typedef struct {
     char nombre[ST3];
     uint32_t valor; 
@@ -16,20 +16,28 @@ typedef char MNO[ST4];
 
 void cargarMnemonicos(MNO mnemonicos[32]);
 void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]);
-void disassembler();
+void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N);
 void cargarRegistros(TReg registros[BYTES]);
 void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int *condicion);
+void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N);
+void inicializarReg(TReg registros[BYTES]);
+
 
 void main(int argc, char *argv[]){
     TReg registros[BYTES];  // poner en TDA?
     uint8_t memoria[CAPACIDADMEM]; // poner en TDA?
     uint8_t N;
     MNO mnemonicos[BYTES];
+    uint32_t descSeg[CANTDESSEG];
 
     if (argc >= 2 && argc <=3){
         cargarCodeSeg(argc, argv, &N, memoria);
         cargarRegistros(registros);
+        cargarDescSeg(descSeg, N);
         cargarNmonicos(mnemonicos);
+
+        inicializarReg(registros);
+
         if(argc == 3)
             if (strcmp("-d", argv[3])){
                 //muestra la traduccion
@@ -64,6 +72,7 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
     else {
         fread(&header, sizeof(char [5]), 1, archB);
         header[6] = '\0';
+        
         fread(&version, sizeof(uint8_t), 1, archB);
         
         fread(N, sizeof(uint8_t), 1, archB);
@@ -84,9 +93,30 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
     }
 }
 
-void disassembler(){
-    
-    
+void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N){
+    int condicion = 1, i = 0, cant;
+    char *instruccion;
+    while (i<N && condicion){
+        printf("[%04x]: ", i);
+        lecturaOperandos(registros, memoria, &condicion);
+        
+        /*
+        cant = (registros[5].valor >> 24) + (registros[6].valor >> 24) + 1;
+        for (j = 0; j < cant; j++)
+            printf("%02x ", memoria[i + j]);
+        
+        printf("| %s ", mnemonicos[registros[4].valor]);
+        
+        if (registros[5] != 0) //puede ser inmediato, memoria, registro o ninguno
+            if(registros[6] != 0)
+                printf("%s, %s", ); 
+            else
+                printf("%s ", );
+        
+        printf("\n");
+        i += cant;
+        */
+    }
 }
 
 void cargarRegistros(TReg registros[BYTES]){
@@ -153,6 +183,7 @@ void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int 
         } else 
             registros[3].valor += ((registros[5].valor >> 6) & 0x03)+ ((registros[6].valor >> 6) & 0x03) + 1; // si no es JMP o primos
     }else{
+        registros[3].valor = 0xffffffff;
         *condicion = 0;
     }
 }
@@ -169,3 +200,30 @@ void cargarNmonicos(MNO mnemonicos[32]){
         fclose(arch);
     }
 }
+
+
+void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N){
+    int i;
+    for (i = 0; i < CANTDESSEG; i++){
+        if (i == 0){
+            descSeg[i] = 0;
+            descSeg[i] = descSeg[i] << 16;
+            descSeg[i] += N-1;
+        } else if (i == 1) {
+            descSeg[i] = N;
+            descSeg[i] = descSeg[i] << 16;
+            descSeg[i] += CAPACIDADMEM - N;
+        } else
+            descSeg[i] = 0;
+    }
+}
+
+void inicializarReg(TReg registros[BYTES]){
+    registros[26].valor = 0x0000;
+    registros[27].valor = 0x0100;
+    registros[3].valor = 0x0000;
+}
+
+void div(); //validar division por 0
+
+void sum();
