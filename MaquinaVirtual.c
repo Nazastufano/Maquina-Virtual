@@ -21,7 +21,7 @@ void cargarRegistros(TReg registros[BYTES]);
 void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int *condicion);
 void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N);
 void inicializarReg(TReg registros[BYTES]);
-
+void mostrarOperandos(TReg registros[BYTES], uint8_t i);
 
 void main(int argc, char *argv[]){
     TReg registros[BYTES];  // poner en TDA?
@@ -34,19 +34,16 @@ void main(int argc, char *argv[]){
         cargarCodeSeg(argc, argv, &N, memoria);
         cargarRegistros(registros);
         cargarDescSeg(descSeg, N);
-        cargarNmonicos(mnemonicos);
+        cargarMnemonicos(mnemonicos);
 
         inicializarReg(registros);
-
         if(argc == 3)
-            if (strcmp("-d", argv[3])){
-                //muestra la traduccion
-                
-                
-                //disassembler(memoria, registros, N); 
-                scanf("");
+            if (strcmp("-d", argv[2]) == 0){
+                disassembler(registros, memoria, mnemonicos, N); //muestra la traduccion
+                inicializarReg(registros);
+                scanf("%c");
             } else
-                printf("Argumento invalido. %s no existe.\n", argv[3]);
+                printf("Argumento invalido. %s no existe.\n", argv[2]);
         
         //ejecutarInstrucciones(memoria,N);
         /*
@@ -94,29 +91,33 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
 }
 
 void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N){
-    int condicion = 1, i = 0, cant;
-    char *instruccion;
-    while (i<N && condicion){
-        printf("[%04x]: ", i);
+    int condicion = 1, i = 0, j, cant;
+
+    while (i <= N && condicion){
+        printf("[%04x]: ", registros[3].valor);
+        
         lecturaOperandos(registros, memoria, &condicion);
         
-        /*
-        cant = (registros[5].valor >> 24) + (registros[6].valor >> 24) + 1;
-        for (j = 0; j < cant; j++)
-            printf("%02x ", memoria[i + j]);
+        if (condicion){
+            cant = (registros[5].valor >> 24) + (registros[6].valor >> 24) + 1;
+            for (j = 0; j < cant; j++)
+                printf("%02x ", memoria[registros[3].valor - cant + j]);
+        } else
+            printf("%02x ", memoria[i]);
         
         printf("| %s ", mnemonicos[registros[4].valor]);
-        
-        if (registros[5] != 0) //puede ser inmediato, memoria, registro o ninguno
-            if(registros[6] != 0)
-                printf("%s, %s", ); 
-            else
-                printf("%s ", );
-        
+            
+        if (registros[5].valor != 0 && condicion) { //puede ser inmediato, memoria, registro o ninguno
+            mostrarOperandos(registros, 5);
+            if(registros[6].valor != 0){
+                printf(", ");
+                mostrarOperandos(registros, 6);
+            }
+        }
+                
         printf("\n");
         i += cant;
-        */
-    }
+    }    
 }
 
 void cargarRegistros(TReg registros[BYTES]){
@@ -137,7 +138,8 @@ void cargarRegistros(TReg registros[BYTES]){
 }
 
 void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int *condicion){
-    uint32_t aux;
+    uint32_t aux, valorAGuardar;
+
     int i;
 
     registros[4].valor = memoria[registros[3].valor];
@@ -146,49 +148,44 @@ void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], int 
     if(registros[4].valor != 0x0f){ // al menos tiene un operando
         registros[6].valor = registros[5].valor = memoria[registros[3].valor];
         registros[5].valor = (registros[5].valor >> 4) & 0x03; 
-        registros[6].valor = (registros[6].valor  >> 6) & 0x03; //asumo que tiene solo un operando
+        registros[6].valor = (registros[6].valor >> 6) & 0x03; //asumo que tiene solo un operando
         
-        if(registros[5].valor == 0x00){
-           registros[5].valor = registros[6].valor;
-           registros[6].valor = 0x00;
-        }
+        aux = registros[6].valor;
         
-        aux=registros[5].valor;
-        
+        valorAGuardar = 0;
         for(i=1;i<=aux;i++){
-            registros[5].valor = registros[5].valor << 8;
-            registros[5].valor = registros[5].valor | memoria[registros[3].valor + i];
+            valorAGuardar = valorAGuardar << 8;
+            valorAGuardar = valorAGuardar | memoria[registros[3].valor + i];
         }
+        registros[6].valor = registros[6].valor << 24 | valorAGuardar;
         
-        if(registros[6].valor != 0x00){ //tiene dos?
+        if(registros[5].valor != 0x00){ //tiene dos?
             // tiene dos operando
-            i = aux;
-            aux=registros[6].valor + i;
-        
-            for(;i<=aux;i++){
-                registros[6].valor = registros[6].valor << 8;
-                registros[6].valor = registros[6].valor | memoria[registros[3].valor + i];
+            i = aux+1;
+            aux = registros[5].valor + i;
+            
+            valorAGuardar = valorAGuardar & 0;
+            for(;i<aux;i++){
+                valorAGuardar = valorAGuardar << 8;
+                valorAGuardar = valorAGuardar | memoria[registros[3].valor + i];
             }
+
+            registros[5].valor = registros[5].valor << 24 | valorAGuardar;
         }
 
-        if (registros[4].valor >= 0x01 && registros[4].valor <= 0x07){ //avance normal o jump
-            if (registros[4].valor & 0x00FFFFFF < registros[27].valor){
-                *condicion = 0;
-                printf("Invade segmento de codigo.\n");
-            } else if (registros[5].valor & 0x00FFFFFF >= CAPACIDADMEM){
-                *condicion = 0;
-                printf("Posicion de memoria invalida.\n");
-            } else
-                registros[3].valor = registros[5].valor & 0x00FFFFFF;
-        } else 
-            registros[3].valor += ((registros[5].valor >> 6) & 0x03)+ ((registros[6].valor >> 6) & 0x03) + 1; // si no es JMP o primos
-    }else{
-        registros[3].valor = 0xffffffff;
+        if(registros[5].valor == 0x00){ //Si trae problemas, es esto
+            registros[5].valor = registros[6].valor;
+            registros[6].valor = 0x00;
+        }
+
+        registros[3].valor += ((registros[5].valor >> 24) & 0x03) + ((registros[6].valor >> 24) & 0x03) + 1; // si no es JMP o primos       
+    } else {
         *condicion = 0;
+        registros[3].valor = 0xffffffff;
     }
 }
 
-void cargarNmonicos(MNO mnemonicos[32]){
+void cargarMnemonicos(MNO mnemonicos[32]){
     FILE * arch;
     int i = 0;
 
@@ -220,10 +217,88 @@ void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N){
 
 void inicializarReg(TReg registros[BYTES]){
     registros[26].valor = 0x0000;
-    registros[27].valor = 0x0100;
+    registros[27].valor = 0x01000000;
     registros[3].valor = 0x0000;
+}
+
+void mostrarOperandos(TReg registros[BYTES], uint8_t i){
+    TReg regAux = registros[27];
+    uint8_t pos = (registros[i].valor << 8) >> 24;
+    int8_t offset = (registros[i].valor << 16) >> 16;
+    uint8_t byte1 = (registros[i].valor << 24) >> 24;
+
+    if(registros[i].valor >> 24 == 1) //registro
+        printf(" %s", registros[byte1].nombre);
+        
+    else if(registros[i].valor >> 24 == 2) //inmediato
+        printf(" %d", offset);
+        
+    else if(registros[i].valor >> 24 == 3){
+        //memoria -> [reg], [reg + offset] y [offset]
+        
+        if(pos != 0)
+            regAux = registros[pos];
+        
+        if (offset == 0)
+            printf(" [%s]", regAux.nombre);
+        else
+            printf(" [%s+%d]", regAux.nombre, offset);
+    }
 }
 
 void div(); //validar division por 0
 
 void sum();
+
+void jmp(){
+    /*
+    
+    if (registros[4].valor >= 0x01 && registros[4].valor <= 0x07){ //avance normal o jump
+            if ((registros[5].valor & 0x0000FFFF) >= registros[27].valor){
+                *condicion = 0;
+                printf("Invade segmento de datos.\n");
+            } else if ((registros[5].valor & 0x0000FFFF) > CAPACIDADMEM){
+                *condicion = 0;
+                printf("Posicion de memoria invalida.\n");
+            } else
+                registros[3].valor = registros[5].valor & 0x0000FFFF; //
+        } else 
+         
+        */
+}
+
+
+/*
+
+if
+    caso 1
+    caso2
+    caso3
+
+        [edx + 4], [ds+4]
+        memorias(op2);
+        if(op1>>24 == 3){
+            
+            registros[2].valor;
+            memorias(op1);
+        }
+
+grabar();
+leer();
+
+funcion memorias()
+    parametro: ()
+        j, opX, reg
+
+    LAR = 2bytes       2bytes
+           tablaDeSeg   offset opX
+    MAR = 2bytes       2bytes
+
+    if (2byte mas significativo == 0)
+        memoria[tablaDeSeg[(registro[j].valor >> 16)]>>16 + cant]
+    else
+        memoria[registro[opX].valor + cant];
+    
+    MBR = dato a guardar
+
+*/
