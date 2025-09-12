@@ -36,11 +36,13 @@ int32_t shiftRightSar(int32_t a, int32_t b) { return a >> b; }
 int32_t y(int32_t a, int32_t b) { return a & b; }
 int32_t o(int32_t a, int32_t b) { return a | b; }
 int32_t xO(int32_t a, int32_t b) { return a ^ b; }
+int32_t move(int32_t a, int32_t b) { return a = b; }
 
 int32_t not(int32_t a) { return ~a; }
 
 void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], Operacion op);
 
+void mov(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void add(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void sub(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void mul(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
@@ -62,7 +64,7 @@ void inicializarReg(TReg registros[BYTES]);
 void mostrarOperandos(TReg registros[BYTES], uint8_t i);
 
 void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint8_t opx);
-void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint32_t valor);
+void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor);
 
 
 void main(int argc, char *argv[]){
@@ -180,7 +182,7 @@ void cargarRegistros(TReg registros[BYTES]){
 }
 
 void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM]){
-    uint32_t aux, valorAGuardar;
+    int32_t aux, valorAGuardar;
 
     int i;
 
@@ -272,15 +274,15 @@ void mostrarOperandos(TReg registros[BYTES], uint8_t i){
     int8_t offset = (registros[i].valor << 16) >> 16;
     uint8_t byte1 = (registros[i].valor << 24) >> 24;
 
-    if((registros[i].valor >> 24) & 0x3 == 1) //registro
+    if(registros[i].valor >> 24 == 1) //registro
         printf(" %s", registros[byte1].nombre);
 
-    else if((registros[i].valor >> 24) & 0x3 == 2) //inmediato
+    else if(registros[i].valor >> 24 == 2) //inmediato
         printf(" %d", offset);
         
-    else if((registros[i].valor >> 24) & 0x3 == 3){
+    else if(registros[i].valor >> 24 == 3){
         //memoria -> [reg], [reg + offset] y [offset]
-        
+
         if(pos != 0)
             regAux = registros[pos];
         
@@ -302,15 +304,6 @@ void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t de
         else if((registros[OP2].valor & 0x0f000000) == 0x03000000){
             leer(registros,memoria, descSeg, 6);
             registros[registros[OP1].valor & 0x0ff].valor = op(registros[registros[OP1].valor & 0x0ff].valor, registros[MBR].valor);
-        }
-    } else if ((registros[OP1].valor & 0x0f000000) == 0x02000000){
-        if((registros[OP2].valor & 0x0f000000) == 0x01000000)
-            valor = op(registros[OP1].valor & 0x0ffff, registros[registros[OP2].valor & 0x0ff].valor);
-        else if ((registros[OP2].valor & 0x0f000000) == 0x02000000)
-            valor = op(registros[OP1].valor & 0x0ffff, registros[OP2].valor & 0x0ffff);
-        else if((registros[OP2].valor & 0x0f000000) == 0x03000000){
-            leer(registros,memoria, descSeg, 6);
-            valor = op(registros[OP1].valor & 0x0ffff, registros[MBR].valor);
         }
     } else if((registros[OP1].valor & 0x0f000000) == 0x03000000){
         if((registros[OP2].valor & 0x0f000000) == 0x01000000){
@@ -399,7 +392,7 @@ void jmp(){
         */
 }
 
-void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint32_t valor){ // donde indica el operando 1
+void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor){ // donde indica el operando 1
     uint16_t i, cant = 0x0004;
 
     registros[LAR].valor = (descSeg[1] & 0xffff0000) | (registros[OP1].valor & 0x0ffff); // carga lar
