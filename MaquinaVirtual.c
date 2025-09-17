@@ -88,9 +88,9 @@ void jp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[C
 void jnp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void jne(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void jnn(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-
 void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 void stop(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
+
 void cargarMnemonicos(MNO mnemonicos[32]);
 void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]);
 void cargarRegistros(TReg registros[BYTES]);
@@ -103,7 +103,6 @@ void actualizarCC(TReg registros[BYTES], int32_t resultado);
 int32_t cargarBinario(char *bin, TReg registros[BYTES]);
 void mostrarBinario(int32_t valor);
 char imprimirOPunto(char c);
-
 
 void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint8_t opx);
 void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor);
@@ -236,7 +235,6 @@ char imprimirOPunto(char c) {
         return c;
     else
         return '.';
-    
 }
 
 
@@ -401,7 +399,8 @@ void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t de
             grabar(registros, memoria, descSeg, valor);
         } else if ((registros[OP2].valor & 0x0f000000) == 0x02000000) {
             leer(registros, memoria, descSeg, 5);
-            valor = registros[OP2].valor & 0x0ffff;
+            tmp16 = registros[OP2].valor & 0x0ffff;
+            valor = (int32_t) tmp16;
             op(&registros[MBR].valor, &valor, registros);
             valor = registros[MBR].valor;
             grabar(registros, memoria, descSeg, valor);
@@ -427,7 +426,7 @@ void divid(int32_t *a, int32_t *b, TReg registros[BYTES]) {
     if (*b != 0) 
         *a = *a / *b;
 }
-void comparar(int32_t *a, int32_t *b, TReg registros[BYTES]) { actualizarCC(registros, *a - *b);}
+void comparar(int32_t *a, int32_t *b, TReg registros[BYTES]) { actualizarCC(registros, *a - *b); }
 void shiftLeft(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a << *b; }
 void shiftRightL(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (uint32_t)(*a) >> *b; }
 void shiftRightSar(int32_t *a, int32_t *b, TReg registros[BYTES]){ *a = *a >> *b; }
@@ -436,7 +435,7 @@ void o(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a | *b; }
 void xO(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a ^ *b; }
 void move(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *b; }
 void swapOp(int32_t *a, int32_t *b, TReg registros[BYTES]) { int32_t tmp = *a; *a = *b; *b = tmp; }
-void loadLow(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (*a & 0xFFFF0000) | (*b & 0x0000FFFF) ;}
+void loadLow(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (*a & 0xFFFF0000) | (*b & 0x0000FFFF); }
 void loadHigh(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (*a & 0x0000FFFF) | ((*b & 0x0000FFFF) << 16); }
 void rndo(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = rand() % (*b + 1); }
 
@@ -517,7 +516,6 @@ void cmp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
     operacion(registros, memoria, descSeg, comparar);
 }
 
-
 void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
     int32_t valor;
     int32_t tipo = (registros[OP1].valor >> 24) & 0xff;
@@ -593,21 +591,36 @@ void actualizarCC(TReg registros[BYTES], int32_t resultado) {
 
 void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint8_t opx) {
     uint16_t i;
-    int32_t valor = 0, posLog, posFis;
+    int32_t valor = 0, dirLog, dirFis, limSeg, dirBaseSeg, tamSeg, offset;
     uint16_t cant = 4;
 
-    //MAR 2bytes pos logica, 2 bytes pos fisica
-    //posicion fisica >= inicio pos fisica del segmento && posicion fisica <= final pos fisica del segmento
-    posLog = registros[registros[opx].valor >> 16 & 0xff].valor;
-    posFis = (((descSeg[registros[(registros[opx].valor >> 16) & 0xff].valor >> 16 & 0xff] >> 16) & 0xffff) + (registros[opx].valor & 0x0000ffff));
-    if ((posFis & 0xffff) >= ((descSeg[(posLog >> 16) & 0xffff] >> 16) & 0xffff) && 
-        (posFis & 0xffff) <= (descSeg[(posLog >> 16) & 0xffff] & 0xffff)){
+    //TODO Confirmar si es necesario asumir que si se ingresa un inmediato tranformarlo en ds
+    if((registros[opx].valor >> 16 & 0xff) == 0)
+        dirLog = registros[DS].valor;
+    else
+        dirLog = registros[registros[opx].valor >> 16 & 0xff].valor;
+    
+    //direccion base del segmento
+    dirBaseSeg = descSeg[dirLog >> 16 & 0xffff] >> 16 & 0xffff;
+    
+    //tamaño del segmento
+    tamSeg = descSeg[dirLog >> 16 & 0xffff] & 0xffff;
 
-        registros[LAR].valor = (posLog) + (registros[opx].valor & 0x0ffff);
-        registros[MAR].valor = (((registros[opx].valor & 0x0000ffff) << 16) & 0xffff0000) | posFis;
+    //desplazamiento
+    offset = registros[opx].valor & 0x0000ffff;
+
+    //posicion fisica = direccion base + offset
+    dirFis = dirBaseSeg + offset;
+    
+    //direccion base del segmento + tamaño del Segmento
+    limSeg = dirBaseSeg + tamSeg;
+        
+    if (dirBaseSeg <= dirFis && limSeg >= dirFis + cant){
+        registros[LAR].valor = dirLog + offset;
+        registros[MAR].valor = (cant << 16 & 0xffff0000) | dirFis;
         
         for (i = 0; i < cant; i++)
-            valor = (valor << 8) | memoria[(registros[MAR].valor & 0xFFFF) + i];
+            valor = (valor << 8) | memoria[dirFis + i];
 
         registros[MBR].valor = valor;
     }else {
@@ -617,32 +630,44 @@ void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg
 }
 void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor) {
     int16_t i, cant = 4;
-    int32_t tmp, posLog, posFis;
-   
-    //MAR 2bytes cant, 2 bytes pos fisica
-    //posicion fisica >= inicio pos fisica del segmento && posicion fisica <= final pos fisica del segmento
-     
-    posLog = registros[registros[OP1].valor >> 16 & 0xff].valor;
-    posFis = (((descSeg[registros[(registros[OP1].valor >> 16) & 0xff].valor >> 16 & 0xff] >> 16) & 0xffff) + (registros[OP1].valor & 0x0000ffff));
-    if ((posFis & 0xffff) >= ((descSeg[(posLog >> 16) & 0xffff] >> 16) & 0xffff) && 
-        (posFis & 0xffff) <= (descSeg[(posLog >> 16) & 0xffff] & 0xffff)){
+    int32_t tmp, dirLog, dirFis, limSeg, dirBaseSeg, tamSeg, offset;
 
-        registros[LAR].valor = (registros[registros[OP1].valor >> 16 & 0xff].valor) + (registros[OP1].valor & 0x0ffff);
-        registros[MAR].valor = (((registros[OP1].valor & 0x0000ffff) << 16) & 0xffff0000) | posFis;
+    //Seguir testeando con mas ejemplos
+    if(((registros[OP1].valor >> 16) & 0xffff) == 0)
+        dirLog = registros[DS].valor;
+    else
+        dirLog = registros[(registros[OP1].valor >> 16) & 0xff].valor;
+
+    //direccion base del segmento
+    dirBaseSeg = descSeg[dirLog >> 16 & 0xffff] >> 16 & 0xffff;
+    
+    //tamaño del segmento
+    tamSeg = descSeg[dirLog >> 16 & 0xffff] & 0xffff;
+
+    //desplazamiento
+    offset = registros[OP1].valor & 0x0000ffff;
+
+    //posicion fisica = direccion base + offset
+    dirFis = dirBaseSeg + offset;
+    
+    //direccion base del segmento + tamaño del Segmento
+    limSeg = dirBaseSeg + tamSeg;
+
+    if (dirBaseSeg <= dirFis && limSeg >= dirFis + cant){
+        registros[LAR].valor = dirLog + offset;
+        registros[MAR].valor = (cant << 16 & 0xffff0000) | dirFis;
         registros[MBR].valor = valor;
 
         tmp = valor;
         for(i = cant - 1; i >= 0; i--) {
-            memoria[(registros[MAR].valor & 0xFFFF) + i] = tmp & 0xFF;
+            memoria[dirFis + i] = tmp & 0xFF;
             tmp >>= 8;
         }
     }else {
         printf("Se invade segmento\n");
         registros[IP].valor = 0xffffffff;
     }
-        
 }
-
 
 void saltoGenerico(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], SaltoCond op) {
     int32_t destino = 0;
