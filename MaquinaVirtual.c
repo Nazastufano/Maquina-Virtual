@@ -92,7 +92,7 @@ void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
 void stop(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
 
 void cargarMnemonicos(MNO mnemonicos[32]);
-void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]);
+void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM], TReg registros[BYTES]);
 void cargarRegistros(TReg registros[BYTES]);
 void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N);
 void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N);
@@ -121,45 +121,47 @@ void main(int argc, char *argv[]){
 
     if (argc >= 2 && argc <=3){
         srand(time(NULL));
-        cargarCodeSeg(argc, argv, &N, memoria);
         cargarRegistros(registros);
+        inicializarReg(registros);
+        cargarCodeSeg(argc, argv, &N, memoria, registros);
         cargarDescSeg(descSeg, N);
         cargarMnemonicos(mnemonicos);
-
-        inicializarReg(registros);
-        if(argc == 3)
-            if (strcmp("-d", argv[2]) == 0){
-                disassembler(registros, memoria, mnemonicos, N); //muestra la traduccion
-                inicializarReg(registros);
-                scanf("%c");
-            } else
-                printf("Argumento invalido. %s no existe.\n", argv[2]);
-        
-        while (registros[IP].valor != 0xffffffff){
-            lecturaOperandos(registros, memoria);
-         
-            if (tablaInstrucciones[registros[OPC].valor] != NULL)
-                tablaInstrucciones[registros[OPC].valor](registros, memoria, descSeg);
-            else {
-                registros[IP].valor = 0xffffffff;
-                printf("Instrucción no implementada: 0x%02X\n", registros[OPC].valor);
+    
+        if (registros[IP].valor != 0xffffffff){
+            if(argc == 3)
+                if (strcmp("-d", argv[2]) == 0){
+                    disassembler(registros, memoria, mnemonicos, N); //muestra la traduccion
+                    inicializarReg(registros);
+                } else
+                    printf("Argumento invalido. %s no existe.\n", argv[2]);
+            
+            while (registros[IP].valor != 0xffffffff){
+                lecturaOperandos(registros, memoria);
+            
+                if (tablaInstrucciones[registros[OPC].valor] != NULL)
+                    tablaInstrucciones[registros[OPC].valor](registros, memoria, descSeg);
+                else {
+                    registros[IP].valor = 0xffffffff;
+                    printf("Instrucción no implementada: 0x%02X\n", registros[OPC].valor);
+                }
             }
-        }
+        } 
     } else
         printf("Cantidad invalida de argumentos.\n");
 }
 
-void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM]){
+void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM], TReg registros[BYTES]){
     FILE * archB;
     char nomArch[20], header[6];
     uint8_t datoArch, version;
     int i;
     
     strcpy(nomArch, argv[1]);
-
-    if ((archB = fopen(nomArch, "rb"))==NULL)
+    
+    if ((archB = fopen(nomArch, "rb"))==NULL){
+        registros[IP].valor = 0xffffffff;    
         printf("No fue posible abrir el archivo. Es posible que se haya ingresado mal el nombre.\n");
-    else {
+    } else {
         fread(&header, sizeof(char [5]), 1, archB);
         header[6] = '\0';
         
@@ -176,6 +178,7 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
                 i++;
             }
         } else {
+            registros[IP].valor = 0xffffffff;    
             printf("No esta validado el archivo.\n");
         }
     
@@ -330,6 +333,7 @@ void inicializarReg(TReg registros[BYTES]){
 
 void mostrarBinario(int32_t valor){
     int i;
+    printf("0b");
     for (i = 31; i >= 0; i--) 
         printf("%d", (valor >> i) & 1);    
 }
@@ -384,7 +388,7 @@ void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t de
         else if ((registros[OP2].valor & 0x0f000000) == 0x02000000) {
             tmp16 = registros[OP2].valor & 0xFFFF;
             valor = (int32_t) tmp16;
-            op(&registros[registros[OP1].valor & 0x0ff].valor, &valor, registros);
+            op(&registros[registros[OP1].valor & 0x0ff].valor, &valor, registros);            
         } else if ((registros[OP2].valor & 0x0f000000) == 0x03000000) {
             leer(registros, memoria, descSeg, 6);
             op(&registros[registros[OP1].valor & 0x0ff].valor, &registros[MBR].valor, registros);
@@ -422,11 +426,21 @@ void suma(int32_t *a, int32_t *b, TReg registros[BYTES]) {
 void resta(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a - *b; }
 void multi(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a * *b; }
 void divid(int32_t *a, int32_t *b, TReg registros[BYTES]) { 
-    registros[AC].valor = *a % *b;
-    if (*b != 0) 
-        *a = *a / *b;
+    int32_t aux, aux2;
+    if (*b != 0) {
+        aux = *a;
+        aux2 = *b;
+
+        registros[AC].valor = aux % aux2;
+        *a = aux / aux2;
+    } else {
+        printf("No se puede hacer una division por 0.\n");
+        registros[IP].valor = 0xffffffff;
+    }
 }
-void comparar(int32_t *a, int32_t *b, TReg registros[BYTES]) { actualizarCC(registros, *a - *b); }
+void comparar(int32_t *a, int32_t *b, TReg registros[BYTES]) { 
+    int32_t res = *a - *b;
+    actualizarCC(registros, res); }
 void shiftLeft(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = *a << *b; }
 void shiftRightL(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (uint32_t)(*a) >> *b; }
 void shiftRightSar(int32_t *a, int32_t *b, TReg registros[BYTES]){ *a = *a >> *b; }
@@ -456,16 +470,7 @@ void mul(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
 }
 
 void divi(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){ //validar division por 0
-    int tipoOp = (registros[OP1].valor >> 24) & 0x3;
-    
-    leer(registros, memoria, descSeg, 6);
-    
-    if((registros[OP2].valor & 0x0ffff) != 0 && tipoOp == 1 || registros[registros[OP2].valor & 0x0ff].valor != 0 && tipoOp == 2 || registros[MBR].valor != 0 && tipoOp == 3)
-        operacion(registros, memoria, descSeg, divid); 
-    else {
-        printf("No se puede hacer una division por 0.\n");
-        registros[IP].valor = 0xffffffff;
-    }
+    operacion(registros, memoria, descSeg, divid); 
 }
 
 void shl(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
@@ -536,8 +541,9 @@ void sys(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
     int i;
     int32_t valor;
     char binStr[33];
-
-    if (registros[OP1].valor >> 24 == 1){
+    
+    if ((registros[OP1].valor & 0xffff) == 1){
+        printf("Ingrese un valor: \n");
         if (registros[EAX].valor == 0x01)
             scanf(" %d", &valor);
         else if (registros[EAX].valor == 0x02)
@@ -550,17 +556,15 @@ void sys(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
             scanf("%32s", binStr);
             valor = cargarBinario(binStr, registros);
         }
-
-        //Todavia no fue probado
-        for (i = ((registros[ECX].valor >> 16) & 0xffff) + ((registros[ECX].valor) & 0xffff) - 1; i < registros[ECX].valor >> 16 & 0xffff; i--){
-            memoria[registros[EDX].valor] = valor & 0xff;
+        for (i = ((registros[ECX].valor >> 16) & 0xffff) - 1; i >= 0 & 0xffff; i--){
+            memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + i] = valor & 0xff;
             valor = valor >> 8;
         }
-    } else if (registros[OP1].valor >> 24 == 2){
+    } else if ((registros[OP1].valor & 0xffff) == 2){
         for (i = 0; i < (registros[ECX].valor >> 16 & 0xffff); i++)
             valor = (valor << 8) | memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + i];
             
-        printf("[%04x] ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff));
+        printf("[%04x]: ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff));
         
         if (registros[EAX].valor == 0x01)
             printf("%d ", valor);
@@ -577,7 +581,6 @@ void sys(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
     }
     
 }
-
 
 void actualizarCC(TReg registros[BYTES], int32_t resultado) {
     registros[CC].valor = 0;              // limpio N y Z    
