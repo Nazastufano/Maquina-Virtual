@@ -18,6 +18,8 @@
 #define OPC 4
 #define OP1 5
 #define OP2 6
+#define SP 7
+#define BP 8
 #define EAX 10
 #define ECX 12
 #define EDX 13
@@ -26,17 +28,19 @@
 #define CC 17
 #define CS 26
 #define DS 27
+#define ES 28
+#define SS 29
+#define KS 30
+#define PS 31
 
 typedef struct {
     char nombre[ST3];
     int32_t valor; 
 } TReg;
 
-typedef char * CADENA;
-
 typedef char MNO[ST4];
 
-typedef void (*Instruccion)(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
+typedef void (*Instruccion)(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
 typedef void (*SaltoCond)(TReg registros[BYTES], int32_t destino);
 typedef void (*Operacion)(int32_t *a, int32_t *b, TReg registros[BYTES]);
 
@@ -65,41 +69,44 @@ void jnpOp(TReg registros[BYTES], int32_t destino);
 void jnOp(TReg registros[BYTES], int32_t destino);
 void jnnOp(TReg registros[BYTES], int32_t destino);
 
-void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], Operacion op);
+void operacion(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], Operacion op);
 
-void sys(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void mov(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void add(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void sub(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void mul(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void divi(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void shl(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void shr(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void sar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void and(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void or(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void xor(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void swap(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void ldl(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void ldh(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void rnd(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void cmp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jmp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jz(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jnz(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jnp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jne(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void jnn(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
-void stop(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]);
+void sys(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void mov(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void add(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void sub(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void mul(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void divi(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void shl(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void shr(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void sar(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void and(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void or(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void xor(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void swap(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void ldl(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void ldh(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void rnd(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void cmp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jmp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jz(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jnz(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jnp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jne(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void jnn(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void not(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void stop(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+
+void sysUno(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
+void sysDos(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]);
 
 void cargarMnemonicos(MNO mnemonicos[32]);
-void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM], TReg registros[BYTES]);
+void cargarCodeSeg(int argc, char *argv[], uint16_t *N, uint8_t memoria[], TReg registros[BYTES], uint32_t descSeg[CANTDESSEG]);
 void cargarRegistros(TReg registros[BYTES]);
 void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N);
-void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N);
-void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM]);
+void disassembler(TReg registros[BYTES], uint8_t memoria[], MNO mnemonicos[BYTES], int N);
+void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[]);
 void inicializarReg(TReg registros[BYTES]);
 void mostrarOperandos(TReg registros[BYTES], uint8_t i);
 void actualizarCC(TReg registros[BYTES], int32_t resultado);
@@ -108,14 +115,15 @@ void mostrarBinario(int32_t valor);
 char imprimirOPunto(char c);
 void imprimirPalabra(int32_t pal, char *cad);
 
-void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint8_t opx);
-void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor, uint8_t opx);
+void leer(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], uint8_t opx);
+void grabar(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], int32_t valor, uint8_t opx);
+
+uint32_t swapEndian32(uint32_t val);
 
 void main(int argc, char *argv[]){
-    TReg registros[BYTES];  // poner en TDA?
-    uint8_t memoria[CAPACIDADMEM]; // poner en TDA?
-
-    uint8_t N, i = 0;
+    TReg registros[BYTES];
+    uint8_t i = 0;
+    uint16_t N, M;
     MNO mnemonicos[BYTES];
     uint32_t descSeg[CANTDESSEG];
     Instruccion tablaInstrucciones[BYTES] = {
@@ -123,46 +131,64 @@ void main(int argc, char *argv[]){
         NULL, NULL, NULL, NULL, NULL, stop, mov, add, sub, mul, divi, 
         cmp, shl, shr, sar, and, or, xor, swap, ldl, ldh, rnd
     };
+    //Verifico tamaño de la memoria
+    if(argc > 3 && strncmp(argv[3], "M=",2))
+        M = atoi(argv[3] + 2)*1024;
+    else
+        M = CAPACIDADMEM;
+    uint8_t memoria[M];
 
-    if (argc >= 2 && argc <=3){
-        srand(time(NULL));
-        cargarRegistros(registros);
-        inicializarReg(registros);
-        cargarCodeSeg(argc, argv, &N, memoria, registros);
-        cargarDescSeg(descSeg, N);
-        cargarMnemonicos(mnemonicos);
-    
-        if (registros[IP].valor != 0xffffffff){
-            if(argc == 3)
-                if (strcmp("-d", argv[2]) == 0){
-                    disassembler(registros, memoria, mnemonicos, N); //muestra la traduccion
-                    inicializarReg(registros);
-                } else
-                    printf("Argumento invalido. %s no existe.\n", argv[2]);
+    if (M < CAPACIDADMEM*4-1 && M>=0){ //La memoria no puede ser mayor 65535 ni menor o igual a 0
+        if (argc >= 2 && argc <=6){
+            srand(time(NULL));
+            cargarRegistros(registros);
+            inicializarReg(registros); //quizas se puede omitir y ponerlo dentro del if de la version 1
+            cargarCodeSeg(argc, argv, &N, memoria, registros, descSeg);
+            cargarMnemonicos(mnemonicos);
+        
+            if (registros[IP].valor != 0xffffffff){
+                if(argc == 3)
+                    if (strcmp("-d", argv[2]) == 0){
+                        disassembler(registros, memoria, mnemonicos, N); //muestra la traduccion
+                        inicializarReg(registros);
+                    } else
+                        printf("Argumento invalido. %s no existe.\n", argv[2]);
 
-            while (registros[IP].valor != 0xffffffff && registros[IP].valor <= N){
-                lecturaOperandos(registros, memoria);
+                while (registros[IP].valor != 0xffffffff && registros[IP].valor <= N){
+                    lecturaOperandos(registros, memoria);
 
-                if (tablaInstrucciones[registros[OPC].valor] != NULL)
-                    tablaInstrucciones[registros[OPC].valor](registros, memoria, descSeg);
-                else { 
-                    registros[IP].valor = 0xffffffff;
-                    printf("Instrucción no implementada: 0x%02X\n", registros[OPC].valor);
+                    if (tablaInstrucciones[registros[OPC].valor] != NULL)
+                        tablaInstrucciones[registros[OPC].valor](registros, memoria, descSeg);
+                    else { 
+                        registros[IP].valor = 0xffffffff;
+                        printf("Instrucción no implementada: 0x%02X\n", registros[OPC].valor);
+                    }
+                    
                 }
-                
-            }
-        } 
+            } 
+        } else
+            printf("Cantidad invalida de argumentos.\n");
     } else
-        printf("Cantidad invalida de argumentos.\n");
+        printf("El valor de la memoria no puede ser mayor a %d\n", (CAPACIDADMEM*4-1));
+    
 }
 
-void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDADMEM], TReg registros[BYTES]){
+
+void cargarCodeSeg(int argc, char *argv[], uint16_t *N, uint8_t memoria[], TReg registros[BYTES], uint32_t descSeg[CANTDESSEG]){
     FILE * archB;
     char nomArch[20], header[6];
     uint8_t datoArch, version;
-    int i;
+    uint16_t tam, k, aux;
+    uint32_t valor;
+    int i, j, largoPal = 0,cantPal = 0, cantSeg = 0;
+    
     
     strcpy(nomArch, argv[1]);
+    if (strcmp(nomArch, ".vmi"))
+    {
+        //TODO  ver como cargar los segmentos si tien .vmi
+        //verificar tambien en que posicion de argv viene el archivo vmi
+    }
     
     if ((archB = fopen(nomArch, "rb"))==NULL){
         registros[IP].valor = 0xffffffff;    
@@ -174,11 +200,74 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
         fread(&version, sizeof(uint8_t), 1, archB);
         
         fread(N, sizeof(uint8_t), 1, archB);
-        *N = *N << 8;
-        fread(N, sizeof(uint8_t), 1, archB);
-        
-        if (strcmp(header, "VMX25") == 0 && version == 1){
-            i=0;
+        fread(&aux, sizeof(uint8_t), 1, archB);
+        *N = (*N << 8) | aux;
+        if (strcmp(header, "VMX25") == 0){
+            if (version == 1){
+                i=0;
+                cargarDescSeg(descSeg, *N);
+                //inicializarReg(registros);
+            } else if(version == 2) {
+                i=0;
+                //tiene parametros
+                if (strncmp(argv[argc-1], "-p", 2) == 0){
+                    tam = strlen(argv[argc-1])-3;
+                    j = 3;
+                    //carga de palabras
+                    while (j < tam+3){
+                        if (argv[argc-1][j] != ' ' && j != tam+3)
+                            memoria[j-3] = argv[argc-1][j];
+                        else
+                            memoria[j-3] = '\0';
+                        
+                        j++;
+                    }
+                    
+                    //carga de punteros
+                    for (i = 0; i < tam; i++) {
+                        if (memoria[i] == '\0'){
+                            valor = i-largoPal;
+                            valor = swapEndian32(valor);
+                            memcpy(&memoria[tam + cantPal*4], &valor, sizeof(uint32_t));
+                            largoPal = 0;
+                            cantPal++;
+                        } else 
+                            largoPal++;
+                    }
+
+                    //carga de param segment
+                    i = tam + cantPal*4;
+                    descSeg[cantSeg] = 0;
+                    descSeg[cantSeg] = descSeg[cantSeg] << 16 | i;
+                }
+                //carga de resto de segmentos
+                for (j = 0; j < 4; j++){
+                    //fread(&tam, sizeof(uint16_t), 1, archB);
+                    fread(&tam, sizeof(uint8_t), 1, archB);
+                    fread(&aux, sizeof(uint8_t), 1, archB);
+                    tam = (tam << 8) | aux;
+                    
+                    if (tam != 0){
+                        cantSeg++;
+                        descSeg[cantSeg] = descSeg[cantSeg-1];
+                        descSeg[cantSeg] = descSeg[cantSeg] << 16 | tam;
+                    }
+                }
+                
+                //verifica donde esta el codeSegment
+                if(strncmp(argv[argc-1], "-p", 2) == 0)
+                    i = descSeg[1] & 0xffff; 
+                else
+                    i = descSeg[0] & 0xffff; 
+                
+                //lee offset del entry point
+                fread(&tam, sizeof(uint8_t), 1, archB);
+                fread(&aux, sizeof(uint8_t), 1, archB);
+                tam = (tam << 8) | aux;
+
+                registros[IP].valor = i + tam;
+            }
+            //carga de codeSegment
             while (fread(&datoArch, sizeof(uint8_t), 1, archB) == 1){
                 memoria[i] = datoArch;
                 i++;
@@ -192,7 +281,15 @@ void cargarCodeSeg(int argc, char *argv[], uint8_t *N, uint8_t memoria[CAPACIDAD
     }
 }
 
-void disassembler(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], MNO mnemonicos[BYTES], int N){
+uint32_t swapEndian32(uint32_t val) {
+    return ((val >> 24) & 0x000000FF) |  // Byte 0 → Byte 3
+           ((val >> 8)  & 0x0000FF00) |  // Byte 1 → Byte 2
+           ((val << 8)  & 0x00FF0000) |  // Byte 2 → Byte 1
+           ((val << 24) & 0xFF000000);   // Byte 3 → Byte 0
+}
+
+
+void disassembler(TReg registros[BYTES], uint8_t memoria[], MNO mnemonicos[BYTES], int N){
     int i = 0, j, cant;
 
     while (i < N){ //sacar reg
@@ -262,7 +359,7 @@ char imprimirOPunto(char c) {
         return '.';
 }
 
-void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM]){
+void lecturaOperandos(TReg registros[BYTES], uint8_t memoria[]){
     int32_t aux, valorAGuardar;
 
     int i;
@@ -331,14 +428,14 @@ void cargarMnemonicos(MNO mnemonicos[32]){
     }
 }
 
-
+//version 1.0
 void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N){
     int i;
     for (i = 0; i < CANTDESSEG; i++){
         if (i == 0){
             descSeg[i] = 0;
             descSeg[i] = descSeg[i] << 16;
-            descSeg[i] |= N-1;
+            descSeg[i] |= N;
         } else if (i == 1) {
             descSeg[i] = N;
             descSeg[i] = descSeg[i] << 16;
@@ -402,7 +499,7 @@ void mostrarOperandos(TReg registros[BYTES], uint8_t i){
     }
 }
 
-void operacion(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], Operacion op) {
+void operacion(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], Operacion op) {
     int32_t valor;
     int32_t tmp;
     int16_t tmp16;
@@ -485,75 +582,75 @@ void loadLow(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (*a & 0xFFFF0
 void loadHigh(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = (*a & 0x0000FFFF) | ((*b & 0x0000FFFF) << 16); }
 void rndo(int32_t *a, int32_t *b, TReg registros[BYTES]) { *a = rand() % (*b + 1); }
 
-void mov(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void mov(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     operacion(registros, memoria, descSeg, move);
 }
 
-void add(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void add(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     operacion(registros, memoria, descSeg, suma);
 }
 
-void sub(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void sub(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, resta);
 }
 
-void mul(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void mul(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, multi);
 }
 
-void divi(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){ //validar division por 0
+void divi(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){ //validar division por 0
     operacion(registros, memoria, descSeg, divid); 
 }
 
-void shl(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void shl(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, shiftLeft);
 }
 
-void shr(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void shr(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, shiftRightL);
 }
 
-void sar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void sar(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, shiftRightSar);
 }
 
-void and(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void and(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, y);
 }
 
-void or(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void or(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, o);
 }
 
-void xor(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void xor(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, xO);
 }
 
-void swap(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void swap(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, swapOp);
 }
 
-void ldl(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void ldl(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, loadLow);
 }
 
-void ldh(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void ldh(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, loadHigh);
 }
 
-void rnd(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void rnd(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, rndo);
 }
 
-void stop(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void stop(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     registros[IP].valor = 0xffffffff;
 }
 
-void cmp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void cmp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     operacion(registros, memoria, descSeg, comparar);
 }
 
-void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
+void not(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
     int32_t valor;
     int32_t tipo = (registros[OP1].valor >> 24) & 0xff;
 
@@ -569,67 +666,74 @@ void not(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[
     actualizarCC(registros, valor);
 }
 
-void sys(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]){
-    int i, j, k;
+void sys(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
+    
+    if ((registros[OP1].valor & 0xffff) == 1)
+        sysUno(registros,memoria,descSeg);
+    else if ((registros[OP1].valor & 0xffff) == 2)
+        sysDos(registros,memoria,descSeg);
+    
+}
+
+void sysUno(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
+    int i, j;
+    char binStr[33];
+    int32_t valor;
+    for (j = 0; j < (registros[ECX].valor & 0x0000ffff); j++){
+        printf("[%04x]: ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + (j*(registros[ECX].valor >> 16 & 0xffff)));
+        
+        if (registros[EAX].valor & 0x10){
+            scanf("%32s", binStr);
+            valor = cargarBinario(binStr, registros);
+        } 
+        if (registros[EAX].valor & 0x08)
+            scanf(" %x", &valor);
+        if (registros[EAX].valor & 0x04)
+            scanf(" %o", &valor);
+        if (registros[EAX].valor & 0x02)
+            scanf(" %c", &valor);
+        if (registros[EAX].valor & 0x01)
+            scanf(" %d", &valor);
+                            
+        for (i = ((registros[ECX].valor >> 16) & 0xffff) - 1; i >= 0 & 0xffff; i--){
+            memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + (j*(registros[ECX].valor >> 16 & 0xffff)) + i] = valor & 0xff;
+            valor = valor >> 8;
+        }
+    }
+}
+
+
+void sysDos(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]){
+    int i, j;
+    char binStr[33];
     int32_t valor = 0, cant = 0;
     char *cadena;
-    char binStr[33];
-    
-    if ((registros[OP1].valor & 0xffff) == 1){
-        for (j = 0; j < (registros[ECX].valor & 0x0000ffff); j++){
-            printf("[%04x]: ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + (j*(registros[ECX].valor >> 16 & 0xffff)));
-        
-            if (registros[EAX].valor & 0x10){
-                scanf("%32s", binStr);
-                valor = cargarBinario(binStr, registros);
-            } 
-            if (registros[EAX].valor & 0x08)
-                scanf(" %x", &valor);
-            if (registros[EAX].valor & 0x04)
-                scanf(" %o", &valor);
-            if (registros[EAX].valor & 0x02)
-                scanf(" %c", &valor);
-            if (registros[EAX].valor & 0x01)
-                scanf(" %d", &valor);
+    for (j = 0; j < (registros[ECX].valor & 0x0000ffff); j++){
+        for (i = cant; i < cant + (registros[ECX].valor >> 16 & 0xffff); i++)
+            valor = (valor << 8) | memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + i];
+
+        cant += (registros[ECX].valor >> 16 & 0xffff);
             
-            for (i = ((registros[ECX].valor >> 16) & 0xffff) - 1; i >= 0 & 0xffff; i--){
-                memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + (j*(registros[ECX].valor >> 16 & 0xffff)) + i] = valor & 0xff;
-                valor = valor >> 8;
-            }
+        printf("[%04x]: ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + j*(registros[ECX].valor >> 16 & 0xffff));
+            
+        if (registros[EAX].valor & 0x10)
+            mostrarBinario(valor);
+        if (registros[EAX].valor & 0x08)
+            printf("0x%x ", valor);
+        if (registros[EAX].valor & 0x04)
+            printf("0o%o ", valor);
+        if (registros[EAX].valor & 0x02){
+            imprimirPalabra(valor, cadena);
+                
+            printf("%s ", cadena);    
         }
-    } else if ((registros[OP1].valor & 0xffff) == 2){
-        for (j = 0; j < (registros[ECX].valor & 0x0000ffff); j++){
-    
-            for (i = cant; i < cant + (registros[ECX].valor >> 16 & 0xffff); i++)
-                valor = (valor << 8) | memoria[(descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + i];
                 
-            
-            cant += (registros[ECX].valor >> 16 & 0xffff);
-            
-            printf("[%04x]: ", (descSeg[registros[EDX].valor >> 16 & 0xff] >> 16 & 0xffff) + (registros[EDX].valor & 0x0000ffff) + j*(registros[ECX].valor >> 16 & 0xffff));
-            
-            if (registros[EAX].valor & 0x10)
-                mostrarBinario(valor);
-            if (registros[EAX].valor & 0x08)
-                printf("0x%x ", valor);
-            if (registros[EAX].valor & 0x04)
-                printf("0o%o ", valor);
-            if (registros[EAX].valor & 0x02){
-                imprimirPalabra(valor, cadena);
-                
-                printf("%s ", cadena);    
-            }
-                
-            if (registros[EAX].valor & 0x01)
-                printf("%d ", valor);
+        if (registros[EAX].valor & 0x01)
+            printf("%d ", valor);
             
             
-            printf("\n");
-        }
-        
-        
+        printf("\n");
     }
-    
 }
 
 void actualizarCC(TReg registros[BYTES], int32_t resultado) {
@@ -642,7 +746,7 @@ void actualizarCC(TReg registros[BYTES], int32_t resultado) {
 
 }
 
-void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], uint8_t opx) {
+void leer(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], uint8_t opx) {
     uint16_t i;
     int32_t valor = 0, dirLog, dirFis, limSeg, dirBaseSeg, tamSeg, offset;
     uint16_t cant = 4;
@@ -681,7 +785,7 @@ void leer(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg
         registros[IP].valor = 0xffffffff;
     }
 }
-void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], int32_t valor, uint8_t opx) {
+void grabar(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], int32_t valor, uint8_t opx) {
     int16_t i, cant = 4;
     int32_t tmp, dirLog, dirFis, limSeg, dirBaseSeg, tamSeg, offset;
     
@@ -722,7 +826,7 @@ void grabar(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descS
     }
 }
 
-void saltoGenerico(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG], SaltoCond op) {
+void saltoGenerico(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG], SaltoCond op) {
     int32_t destino = 0;
     int32_t tipo = (registros[OP1].valor >> 24) & 0xff;
     /*
@@ -742,7 +846,7 @@ void saltoGenerico(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_
     if (destino < 0 || destino >= (descSeg[registros[CS].valor] & 0xffff)) {
         registros[IP].valor = 0xffffffff;
         printf("Salto fuera del segmento de codigo.\n");
-    } else if (destino > CAPACIDADMEM){
+    } else if (destino > CAPACIDADMEM){ //capaz pasarlo por parametro
         registros[IP].valor = 0xffffffff;
         printf("Posicion de memoria invalida.\n");
     } else 
@@ -783,30 +887,30 @@ void jnnOp(TReg registros[BYTES], int32_t destino) {
         registros[IP].valor = destino;
 }
 
-void jmp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jmp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jmpOp); 
 }
 
-void jz(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jz(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jzOp);
 }
 
-void jnz(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jnz(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jnzOp);
 }
 
-void jp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jpOp);
 }
 
-void jnp(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jnp(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jnpOp);
 }
 
-void jne(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jne(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jnOp);
 }
 
-void jnn(TReg registros[BYTES], uint8_t memoria[CAPACIDADMEM], uint32_t descSeg[CANTDESSEG]) {
+void jnn(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]) {
     saltoGenerico(registros, memoria, descSeg, jnnOp);
 }

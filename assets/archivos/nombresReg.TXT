@@ -5,8 +5,8 @@ IP
 OPC
 OP1
 OP2
--
--
+SP
+BP
 -
 EAX
 EBX
@@ -26,7 +26,7 @@ CC
 -
 CS
 DS
--
--
--
--
+ES
+SS
+KS
+PS
