@@ -8,11 +8,11 @@ JNP
 JNN
 NOT
 ---
+---
 PUSH
 POP
 CALL
 RET
----
 STOP
 MOV
 ADD
