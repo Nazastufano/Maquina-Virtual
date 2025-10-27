@@ -166,7 +166,7 @@ void main(int argc, char *argv[]){
             
                 if(hayParametros(argc, argv, "-d")) {
                     disassembler(registros, memoria, mnemonicos, descSeg); //muestra la traduccion
-                    inicializarReg(registros, descSeg);
+                    //inicializarReg(registros, descSeg); 
                 }
                 
                 while (registros[IP].valor != 0xffffffff && registros[IP].valor <= N){
@@ -248,6 +248,9 @@ void cargarCodeSeg(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CA
 
                     registros[CS].valor = 0x00000000;
                     registros[DS].valor = 0x00010000;
+                    for (i = 0; i < 4; i++)
+                        registros[ES].valor = 0xffffffff;
+                    
                     cargarDescSeg(descSeg, tam);
                     inicializarReg(registros, descSeg);
                 } else if(version == 2) {
@@ -267,7 +270,7 @@ void cargarCodeSeg(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CA
                         //carga de punteros
                         for (i = 0; i < tam; i++) {
                             if (memoria[i] == '\0'){
-                                valor = i-largoPal; //TODO verificar si anda bien
+                                valor = i-largoPal; //solucionado: TODO verificar si anda bien
                                 valor = swapEndian32(valor);
                                 memcpy(&memoria[tam + cantPal*4], &valor, sizeof(uint32_t));
                                 largoPal = 0;
@@ -455,6 +458,7 @@ void disassembler(TReg registros[BYTES], uint8_t memoria[], MNO mnemonicos[BYTES
     int codeSeg = registros[CS].valor >> 16;
     int i, j = 0, k, cant, posLetra; 
     int tam = descSeg[registros[KS].valor >> 16] & 0xffff; //tam segmento
+    int ip = registros[IP].valor;
     char cadena[tam];
 
     if (registros[KS].valor != 0xffffffff){
@@ -512,7 +516,8 @@ void disassembler(TReg registros[BYTES], uint8_t memoria[], MNO mnemonicos[BYTES
                 
         printf("\n");
         i += cant;
-    }    
+    }
+    registros[IP].valor = ip;
 }
 
 void cargarRegistros(TReg registros[BYTES]){
@@ -632,7 +637,7 @@ void cargarDescSeg(uint32_t descSeg[CANTDESSEG], int N){
 }
 
 void inicializarReg(TReg registros[BYTES], uint32_t descSeg[CANTDESSEG]){
-    registros[IP].valor = (descSeg[registros[CS].valor >> 16] >> 16) & 0xffff; //TODO ver bien como traer el entypoint para usar generica esta funcion para parte 1 y 2
+    registros[IP].valor = (descSeg[registros[CS].valor >> 16] >> 16) & 0xffff; //solucionado: TODO ver bien como traer el entypoint para usar generica esta funcion para parte 1 y 2
     registros[CC].valor = 0x0000;
 }
 
@@ -1257,7 +1262,7 @@ void leer(TReg registros[BYTES], uint8_t memoria[], uint32_t descSeg[CANTDESSEG]
     int32_t valor = 0, dirLog, dirFis, limSeg, dirBaseSeg, tamSeg, offset;
     uint16_t cant = 4 - ((registros[opx].valor >> 22) & 0x3);
     uint16_t posReg = ((registros[opx].valor >> 16) & 0x1f);
-    //TODO Confirmar si es necesario asumir que si se ingresa un inmediato tranformarlo en ds
+    //TODO solucionado Confirmar si es necesario asumir que si se ingresa un inmediato tranformarlo en ds
     
     if(posReg == 0)
         dirLog = registros[DS].valor;
